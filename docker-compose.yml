@@ -1,0 +1,8 @@
+version: '3.8'
+services:
+  frontend:
+    image: surbhi800/mern-frontend:latest
+    container_name: react-frontend
+    ports:
+      - "80:80"
+    restart: always
