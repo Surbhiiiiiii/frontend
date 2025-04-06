@@ -1,12 +1,13 @@
-# Use Node.js to build the project
-FROM node:18-alpine AS build
+# Step 1: Build React app
+FROM node:18-alpine as build
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY package.json ./
+COPY package-lock.json ./
 RUN npm install
 COPY . .
 RUN npm run build
 
-# Serve the React build using Nginx
+# Step 2: Serve with Nginx
 FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 EXPOSE 80

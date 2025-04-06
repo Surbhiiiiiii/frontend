@@ -1,0 +1,49 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'surbhi-frontend'
+        DOCKERHUB_USER = 'surbhi800'  // 👈 Change this
+    }
+
+    stages {
+        stage('Clone Repo') {
+            steps {
+                git branch:'main',url:'https://github.com/Surbhiiiiiii/frontend.git'
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                script {
+                    dockerImage = docker.build("${DOCKERHUB_USER}/${IMAGE_NAME}")
+                }
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([ credentialsId: 'dockerhub-creds', url: '' ]) {
+                    script {
+                        dockerImage.push("latest")
+                    }
+                }
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sshagent(['ec2-key']) {
+                    sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@<EC2_PUBLIC_IP> '
+                        docker pull your-dockerhub-username/surbhi-frontend:latest &&
+                        docker stop frontend-container || true &&
+                        docker rm frontend-container || true &&
+                        docker run -d -p 80:80 --name frontend-container your-dockerhub-username/surbhi-frontend:latest
+                    '
+                    '''
+                }
+            }
+        }
+    }
+}
